@@ -1,0 +1,51 @@
+gene_name,category,subunit,subcomplex
+PSMA1,20S Core Particle,alpha,
+PSMA2,20S Core Particle,alpha,
+PSMA3,20S Core Particle,alpha,
+PSMA4,20S Core Particle,alpha,
+PSMA5,20S Core Particle,alpha,
+PSMA6,20S Core Particle,alpha,
+PSMA7,20S Core Particle,alpha,
+PSMA8,20S Core Particle,alpha,
+PSMB1,20S Core Particle,beta,
+PSMB2,20S Core Particle,beta,
+PSMB3,20S Core Particle,beta,
+PSMB4,20S Core Particle,beta,
+PSMB5,20S Core Particle,beta,
+PSMB6,20S Core Particle,beta,
+PSMB7,20S Core Particle,beta,
+PSMB8,20S Core Particle,beta,
+PSMB9,20S Core Particle,beta,
+PSMB10,20S Core Particle,beta,
+PSMC1,19S Regulatory Particle,ATPase ,base
+PSMC2,19S Regulatory Particle,ATPase ,base
+PSMC3,19S Regulatory Particle,ATPase ,base
+PSMC4,19S Regulatory Particle,ATPase ,base
+PSMC5,19S Regulatory Particle,ATPase ,base
+PSMC6,19S Regulatory Particle,ATPase ,base
+PSMD1,19S Regulatory Particle,Non-ATPase ,base
+PSMD2,19S Regulatory Particle,Ubiquitin-receptor Non-ATPase ,base
+PSMD3,19S Regulatory Particle,Non-ATPase ,lid
+PSMD4,19S Regulatory Particle,Ubiquitin-receptor Non-ATPase ,
+PSMD5,19S Regulatory Particle,Non-ATPase ,
+PSMD6,19S Regulatory Particle,Non-ATPase ,lid
+PSMD7,19S Regulatory Particle,Non-ATPase ,lid
+PSMD8,19S Regulatory Particle,Non-ATPase ,lid
+PSMD9,19S Regulatory Particle,Non-ATPase ,
+PSMD10,19S Regulatory Particle,Non-ATPase ,
+PSMD11,19S Regulatory Particle,Non-ATPase ,lid
+PSMD12,19S Regulatory Particle,Non-ATPase ,lid
+PSMD13,19S Regulatory Particle,Non-ATPase ,lid
+PSMD14,19S Regulatory Particle,Non-ATPase ,lid
+SEM1,19S Regulatory Particle,Non-ATPase ,lid
+ADRM1,19S Regulatory Particle,Ubiquitin-receptor Non-ATPase,base
+PSME1,11S Regulator,activator subunit ,
+PSME2,11S Regulator,activator subunit ,
+PSME3,11S Regulator,activator subunit ,
+PSME4,11S Regulator,activator subunit ,
+PSMF1,Proteasome inhibitor,inhibitor subunit ,
+PSMG1,Assembling chaperones,,
+PSMG2,Assembling chaperones,,
+PSMG3,Assembling chaperones,,
+PSMG4,Assembling chaperones,,
+PSMG5,Assembling chaperones,,
