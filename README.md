@@ -16,7 +16,6 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 
 BiocManager::install(<"packagename">)
 ```
-* The installation of ermineR requires JAVA and setting $JAVA_HOME variable: [ermineR](https://github.com/PavlidisLab/ermineR)  
 
 ## How to..  
 
@@ -25,17 +24,18 @@ BiocManager::install(<"packagename">)
 * The paper discusses results of pathway enrichment analysis that were performed on ranked gene lists.
 * The ranking is based on the Pearson correlation coefficient (gene-wise, across-samples and within groups (HA, YG, PD). 
 * The ranking takes into account the difference in correlation between groups (see paper methods).
-* The genelist ranking (based on the correlation coefficients given in `./results/rds/gene_cl.rds` and `./results/rds/gene_cl_pd.rds`) are generated in `./pea.Rmd`.
-* The pathway enrichment analysis is performed with [ermineR](https://github.com/PavlidisLab/ermineR) in `./pea.Rmd`. 
-* Requirements for this analysis are the `.rds` files in `./results/rds/` and the GO annotations for ermineR in `./referenceData/go_daily-termdb.rdf-xml`. R packages needed are listed at the beginning of the `./pea.Rmd` file.
-* The knitted, self_contained html of `./pea.Rmd` is also available (`./pea.html`, download and open in browser) and has all pathway enrichment results listed.
+* The genelist ranking (based on the correlation coefficients given in `./results/rds/gene_cl.rds`) are generated in `./pea.Rmd`.
+* The pathway enrichment analysis is performed with [fgsea](https://github.com/ctlab/fgsea) in `./pea.Rmd`. 
+* Requirements for this analysis are the `.rds` files in `./results/rds/` and the GO_simplified and KEGG annotations for fgsea in `./referenceData/`. R packages needed are listed at the beginning of the `./pea.Rmd` file.  
+* Permutation analysis of these results are also performed in `pea.Rmd`, requirements for this is the permuted (simulated) dataset in `rdsData/perms/gene_cl_perm_9_15_4_5000.rds` and the pathway annotations. Permutation analysis was performed on the analyses where we compared correlations between groups and on the analyses where we did pathway enrichment analysis on the correlation coefficients in each group separately.   
+* Would not advice to knit this file. Hasnt been edited appropriately or tested. The execution of permutation analyses is very time consuming. The purpose is mainly to document code.
 
 ### Reproduce Paper Figures
 
 * The main figures (excluding figure 1, which is a schematic figure) can be reproduced with `./analysis.Rmd`.
 * The code loads `.rds` files need for the analysis form `./rdsData/`. These are generated in `./preprocess.Rmd` as described below.
 * The figures are available in `./result_figs/Draft/` and `./result_figs/Supp/`.
-* The `analysis.Rmd` also creates and saves the `gene_cl.rds` and `gene_cl_pd.rds` files to `./results/rds/` (needed in `./pea.Rmd`).
+* The `analysis.Rmd` also creates and saves the `gene_cl.rds` file to `./results/rds/` (needed in `./pea.Rmd`).
 * Would not advice to knit this file. Hasnt been edited appropriately or tested. The purpose is mainly to document code.
 
 ### Rerun analysis from scratch
@@ -74,50 +74,92 @@ BiocManager::install(<"packagename">)
 > sessionInfo()
 R version 3.6.3 (2020-02-29)
 Platform: x86_64-pc-linux-gnu (64-bit)
-Running under: Ubuntu 20.04.1 LTS
+Running under: Ubuntu 20.04.4 LTS
 
 Matrix products: default
 BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0
 LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.9.0
 
 locale:
- [1] LC_CTYPE=en_GB.UTF-8          LC_NUMERIC=C                  LC_TIME=en_GB.UTF-8           LC_COLLATE=en_GB.UTF-8        LC_MONETARY=en_GB.UTF-8
- [6] LC_MESSAGES=en_GB.UTF-8       LC_PAPER=en_GB.UTF-8          LC_NAME=en_GB.UTF-8           LC_ADDRESS=en_GB.UTF-8        LC_TELEPHONE=en_GB.UTF-8
+ [1] LC_CTYPE=en_GB.UTF-8          LC_NUMERIC=C
+ [3] LC_TIME=en_GB.UTF-8           LC_COLLATE=en_GB.UTF-8
+ [5] LC_MONETARY=en_GB.UTF-8       LC_MESSAGES=en_GB.UTF-8
+ [7] LC_PAPER=en_GB.UTF-8          LC_NAME=en_GB.UTF-8
+ [9] LC_ADDRESS=en_GB.UTF-8        LC_TELEPHONE=en_GB.UTF-8
 [11] LC_MEASUREMENT=en_GB.UTF-8    LC_IDENTIFICATION=en_GB.UTF-8
 
 attached base packages:
- [1] stats4    parallel  grid      stats     graphics  grDevices utils     datasets  methods   base
+ [1] stats4    parallel  grid      stats     graphics  grDevices utils     datasets
+ [9] methods   base
 
 other attached packages:
- [1] mixOmics_6.10.9             lattice_0.20-40             MASS_7.3-51.5               boot_1.3-24                 cowplot_1.1.0               ggplotify_0.0.5
- [7] ggrepel_0.8.2               pheatmap_1.0.12             stringr_1.4.0               knitr_1.29                  readr_1.3.1                 tidyr_1.1.1
-[13] gridExtra_2.3               readxl_1.3.1                ggfortify_0.4.10            preprocessCore_1.48.0       DESeq2_1.26.0               SummarizedExperiment_1.16.1
-[19] DelayedArray_0.12.3         BiocParallel_1.20.1         matrixStats_0.56.0          ggpubr_0.4.0                tibble_3.0.3                ggbiplot_0.55
-[25] scales_1.1.1                plyr_1.8.6                  ensembldb_2.10.2            AnnotationFilter_1.10.0     GenomicFeatures_1.38.2      AnnotationDbi_1.48.0
-[31] Biobase_2.46.0              GenomicRanges_1.38.0        GenomeInfoDb_1.22.1         IRanges_2.20.2              S4Vectors_0.24.4            BiocGenerics_0.32.0
-[37] RColorBrewer_1.1-2          dplyr_1.0.2                 colorspace_1.4-1            xlsx_0.6.4.2                kableExtra_1.1.0            colormap_0.1.4
-[43] dendextend_1.14.0           igraph_1.2.5                ermineR_1.0.1.9000          patchwork_1.0.1             ComplexHeatmap_2.2.0        viridis_0.5.1
-[49] viridisLite_0.3.0           ggplot2_3.3.2               reshape2_1.4.4              magrittr_1.5                nvimcom_0.9-102
+ [1] fgsea_1.21.2                ggbiplot_0.55
+ [3] plyr_1.8.6                  infer_1.0.0
+ [5] pbapply_1.5-0               ggplotify_0.0.5
+ [7] ggrepel_0.8.2               pheatmap_1.0.12
+ [9] stringr_1.4.0               knitr_1.29
+[11] readr_1.3.1                 preprocessCore_1.48.0
+[13] tidyr_1.1.1                 gridExtra_2.3
+[15] readxl_1.3.1                ggfortify_0.4.10
+[17] DESeq2_1.26.0               SummarizedExperiment_1.16.1
+[19] DelayedArray_0.12.3         BiocParallel_1.20.1
+[21] matrixStats_0.56.0          ggpubr_0.4.0
+[23] tibble_3.0.3                mixOmics_6.19.4
+[25] lattice_0.20-40             MASS_7.3-51.5
+[27] boot_1.3-24                 cowplot_1.1.0
+[29] ensembldb_2.10.2            AnnotationFilter_1.10.0
+[31] GenomicFeatures_1.38.2      AnnotationDbi_1.48.0
+[33] Biobase_2.46.0              GenomicRanges_1.38.0
+[35] GenomeInfoDb_1.22.1         IRanges_2.20.2
+[37] S4Vectors_0.24.4            BiocGenerics_0.32.0
+[39] scales_1.1.1                RColorBrewer_1.1-2
+[41] dplyr_1.0.2                 colorspace_1.4-1
+[43] xlsx_0.6.4.2                kableExtra_1.1.0
+[45] colormap_0.1.4              dendextend_1.14.0
+[47] igraph_1.2.5                ermineR_1.0.1.9000
+[49] patchwork_1.0.1             ComplexHeatmap_2.2.0
+[51] viridis_0.6.0               viridisLite_0.4.0
+[53] ggplot2_3.3.2               reshape2_1.4.4
+[55] magrittr_1.5                nvimcom_0.9-102
 
 loaded via a namespace (and not attached):
-  [1] backports_1.1.8          circlize_0.4.10          Hmisc_4.4-1              BiocFileCache_1.10.2     lazyeval_0.2.2           splines_3.6.3
-  [7] digest_0.6.25            htmltools_0.5.0          checkmate_2.0.0          memoise_1.1.0            cluster_2.1.0            openxlsx_4.1.5
- [13] annotate_1.64.0          Biostrings_2.54.0        rARPACK_0.11-0           askpass_1.1              prettyunits_1.1.1        jpeg_0.1-8.1
- [19] blob_1.2.1               rvest_0.3.6              rappdirs_0.3.1           haven_2.3.1              xfun_0.16                crayon_1.3.4
- [25] RCurl_1.98-1.2           jsonlite_1.7.0           genefilter_1.68.0        survival_3.1-8           glue_1.4.1               gtable_0.3.0
- [31] zlibbioc_1.32.0          XVector_0.26.0           webshot_0.5.2            GetoptLong_1.0.2         V8_3.2.0                 car_3.0-9
- [37] shape_1.4.4              abind_1.4-5              DBI_1.1.0                rstatix_0.6.0            Rcpp_1.0.5               xtable_1.8-4
- [43] htmlTable_2.0.1          progress_1.2.2           clue_0.3-57              gridGraphics_0.5-0       foreign_0.8-75           bit_4.0.4
- [49] Formula_1.2-3            htmlwidgets_1.5.1        httr_1.4.2               ellipsis_0.3.1           pkgconfig_2.0.3          gemmaAPI_2.0.3.9000
- [55] XML_3.99-0               rJava_0.9-13             nnet_7.3-13              dbplyr_1.4.4             locfit_1.5-9.4           tidyselect_1.1.0
- [61] rlang_0.4.7              munsell_0.5.0            cellranger_1.1.0         tools_3.6.3              generics_0.0.2           RSQLite_2.2.0
- [67] broom_0.7.0              evaluate_0.14            bit64_4.0.2              zip_2.1.0                purrr_0.3.4              xml2_1.3.2
- [73] biomaRt_2.42.1           compiler_3.6.3           rstudioapi_0.11          curl_4.3                 png_0.1-7                ggsignif_0.6.0
- [79] geneplotter_1.64.0       stringi_1.4.6            RSpectra_0.16-0          forcats_0.5.0            ProtGenerics_1.18.0      Matrix_1.2-18
- [85] vctrs_0.3.2              pillar_1.4.6             lifecycle_0.2.0          BiocManager_1.30.10      GlobalOptions_0.1.2      corpcor_1.6.9
- [91] data.table_1.13.0        bitops_1.0-6             rtracklayer_1.46.0       R6_2.4.1                 latticeExtra_0.6-29      rio_0.5.16
- [97] assertthat_0.2.1         xlsxjars_0.6.1           openssl_1.4.2            rjson_0.2.20             withr_2.2.0              GenomicAlignments_1.22.1
-[103] Rsamtools_2.2.3          GenomeInfoDbData_1.2.2   hms_0.5.3                rpart_4.1-15             rvcheck_0.1.8            rmarkdown_2.3
-[109] carData_3.0-4            base64enc_0.1-3          ellipse_0.4.2
+  [1] tidyselect_1.1.0         RSQLite_2.2.0            htmlwidgets_1.5.1
+  [4] munsell_0.5.0            withr_2.2.0              rstudioapi_0.11
+  [7] ggsignif_0.6.0           rJava_0.9-13             GenomeInfoDbData_1.2.2
+ [10] bit64_4.0.2              vctrs_0.3.2              generics_0.0.2
+ [13] xfun_0.16                BiocFileCache_1.10.2     R6_2.4.1
+ [16] clue_0.3-57              locfit_1.5-9.4           bitops_1.0-6
+ [19] gridGraphics_0.5-0       assertthat_0.2.1         nnet_7.3-13
+ [22] gtable_0.3.0             rlang_0.4.10             genefilter_1.68.0
+ [25] GlobalOptions_0.1.2      splines_3.6.3            rtracklayer_1.46.0
+ [28] rstatix_0.6.0            lazyeval_0.2.2           gemmaAPI_2.0.3.9000
+ [31] broom_0.7.0              checkmate_2.0.0          BiocManager_1.30.10
+ [34] abind_1.4-5              backports_1.1.8          Hmisc_4.4-1
+ [37] tools_3.6.3              ellipsis_0.3.1           Rcpp_1.0.5
+ [40] base64enc_0.1-3          progress_1.2.2           zlibbioc_1.32.0
+ [43] purrr_0.3.4              RCurl_1.98-1.2           prettyunits_1.1.1
+ [46] rpart_4.1-15             openssl_1.4.2            GetoptLong_1.0.2
+ [49] haven_2.3.1              cluster_2.1.4            data.table_1.13.0
+ [52] RSpectra_0.16-0          openxlsx_4.1.5           circlize_0.4.10
+ [55] ProtGenerics_1.18.0      hms_0.5.3                xlsxjars_0.6.1
+ [58] evaluate_0.14            xtable_1.8-4             XML_3.99-0
+ [61] rio_0.5.16               jpeg_0.1-8.1             shape_1.4.4
+ [64] compiler_3.6.3           biomaRt_2.42.1           ellipse_0.4.2
+ [67] V8_3.2.0                 crayon_1.3.4             unixtools_0.1-1
+ [70] htmltools_0.5.1.1        corpcor_1.6.9            Formula_1.2-3
+ [73] geneplotter_1.64.0       DBI_1.1.0                dbplyr_1.4.4
+ [76] rappdirs_0.3.1           Matrix_1.2-18            car_3.0-9
+ [79] forcats_0.5.0            pkgconfig_2.0.3          rvcheck_0.1.8
+ [82] GenomicAlignments_1.22.1 foreign_0.8-75           xml2_1.3.2
+ [85] rARPACK_0.11-0           annotate_1.64.0          webshot_0.5.2
+ [88] XVector_0.26.0           rvest_0.3.6              digest_0.6.25
+ [91] Biostrings_2.54.0        fastmatch_1.1-0          rmarkdown_2.3
+ [94] cellranger_1.1.0         htmlTable_2.0.1          curl_4.3
+ [97] Rsamtools_2.2.3          rjson_0.2.20             lifecycle_0.2.0
+[100] jsonlite_1.7.0           carData_3.0-4            askpass_1.1
+[103] pillar_1.4.6             httr_1.4.2               survival_3.1-8
+[106] glue_1.4.1               zip_2.1.0                png_0.1-7
+[109] bit_4.0.4                stringi_1.4.6            blob_1.2.1
+[112] latticeExtra_0.6-29      memoise_1.1.0
 ```
  
