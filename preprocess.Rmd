@@ -1,0 +1,236 @@
+---
+title: "(Post-)Preprocessing of proteomics and RNA"
+author: "Fiona Dick"
+date: "`r Sys.Date()`"
+output: html_document
+	toc: true
+runtime: shiny
+---
+
+```{r}
+library(ensembldb)
+library(ggbiplot)
+library(tibble)
+library(ggpubr)
+library("DESeq2")
+require("ggplot2")
+library(preprocessCore)
+require("kableExtra")
+require("ggfortify")
+require("readxl")
+require("magrittr")
+require("gridExtra")
+require("dplyr")
+require("tidyr")
+require("readr")
+require("knitr")
+require("ggpubr")
+require("stringr")
+require("pheatmap")
+require("RColorBrewer")
+require("ggrepel")
+require("patchwork")
+require("ggplotify")
+library("magrittr")
+library(ComplexHeatmap)
+library(viridis)
+library(reshape2)
+```
+
+##  Utils
+
+```{r}
+source("./functions.R")
+```
+
+```{r}
+cols <- c("#ef476f", "#073b4c", "#118ab2", "#06d6a0", "#84a59d")
+names(cols) <- c("PD", "HA", "Other", "YG", "Reference") 
+```
+
+
+## Paths
+
+```{r}
+# RNA
+gtfPath  <- "./referenceData/gencode.v32.annotation.gtf"
+#remember to uncompress before using
+salmonPath  <- "./salmonOut"
+```
+
+
+## Read metadata
+
+```{r}
+info_rna <- readRDS("./rdsData/info_rna.rds") 
+info_rna_pd <- readRDS("./rdsData/info_rna_pd.rds")
+#proteomics experiment 
+info <- readRDS("./rdsData/info.rds")
+```
+
+
+
+## Load and normalize proteomics data 
+
+From the ProteinGroups (maxQuant output, not provided) file create three count matrices:  
+* raw from maxQuant output (loaded from rds (rawData.rds)
+* remove zeros
+* with quantile normalization 
+* with quantile normalization followed by batch correction
+
+```{r}
+rawData <- readRDS("./rdsData/rawData.rds")
+```
+
+```{r}
+# determine proteins that are making up 5% of the sum of all protein intensities in more than n samples
+topProts <- investigateTopGenes(rawData, name_cols = c("Gene.names", "Protein.IDs"))[[1]][,"Protein.IDs"]
+# remove extremly abundant proteins and zeros
+
+rawData_filt  <- rawData %>%
+	dplyr::filter(Gene.names != "") %>%
+  	dplyr::mutate_at(info$reporter.intensity.id, as.numeric) %>%
+	dplyr::filter(!(Protein.IDs %in% topProts)) %>%
+	dplyr::filter_if(is.numeric, all_vars(. != 0)) 
+# Normalize options
+m_quant  <- rawData_filt %>% loading_norm(., info, method = "quantile", within_batch = T, use_median = T, name_cols = c("Gene.names", "Protein.IDs")) 
+rownames(m_quant) <- m_quant$Protein.IDs
+
+m_lib <-  rawData_filt %>% loading_norm(., info, method = "lib_size", within_batch = T, use_median = T, name_cols = c("Gene.names", "Protein.IDs"))  
+rownames(m_lib) <- m_lib$Protein.IDs
+
+m_logLib <-  rawData_filt %>% loading_norm(., info, method = "log_lib_size", within_batch = T, use_median = T, name_cols = c("Gene.names", "Protein.IDs")) 
+rownames(m_lib) <- m_lib$Proten.IDs
+
+# Apply batch correction 
+m_lib_batch <- batch_corr(m_lib, info)
+rownames(m_lib) <- m_lib$Protein.IDs
+
+# Apply batch correction 
+m_batch <- batch_corr(rawData_filt, info)
+rownames(m_batch) <- m_batch$Protein.IDs
+
+# Apply batch correction followed by quantile correction
+m_batch <- batch_corr(rawData_filt, info)
+m_batch_norm <- loading_norm(m_batch, info, method = "log_lib_size")
+rownames(m_batch_norm) <- m_batch_norm$Protein.IDs
+
+# Apply batch correction followed by scaling
+m_batch <- batch_corr(rawData_filt, info)
+# dividing by root mean square sqrt(sum(x^2)/(n-1)), keep center == F 
+m_batch_scld <- as.data.frame(scale(m_batch[,-c(1,2)], center = F))
+m_batch_scld$Protein.IDs  <- m_batch$Protein.IDs
+m_batch_scld$Gene.names  <- m_batch$Gene.names
+rownames(m_batch_scld) <- m_batch_scld$Protein.IDs
+```
+
+### QC Suppl. Figure 1
+
+## RNA for all samples
+
+```{r gene-levelCPM}
+# combining metadata for HA,Yg and PD samples, renaming condition labels
+info_rna <- info_rna$Norway %>%
+	dplyr::bind_rows(., info_rna_pd) %>%
+	dplyr::mutate(condition = case_when(
+					    condition == "0" ~ "HA",
+					    condition == "1" ~ "YG",
+					    condition == "Case" ~ "PD"))
+```
+
+### Remove RNA sample outliers
+
+
+```{r}
+info_rna %>% 
+	dplyr::filter(rin <= 4) %>%
+	dplyr::pull(sample_id) -> outliers
+outliers
+info_rna %>% dplyr::filter(!sample_id %in% outliers) %>% 
+	dplyr::group_by(condition) %>%
+	tally()
+info_rna <- info_rna %>%
+	dplyr::filter(!sample_id %in% outliers)
+
+```
+
+... continoue preprocessing proteomics
+
+```{r}
+rownames(rawData_filt)  <- rawData_filt$Protein.IDs
+rawData_filt %>% dplyr::select(-Gene.names, -Protein.IDs) -> df
+#Rename HA samples for which we dont have RNASeq to Other
+info %<>% dplyr::mutate(condition1 = ifelse(!(RNAseq_id %in% info_rna$sample_id),"Other", condition1))
+rownames(info) <- info$reporter.intensity.id
+ggbiplot::ggbiplot(prcomp(t(df), scale = T),
+		   groups = info[colnames(df),"batch"],
+		   varname.size = 0, size = 1,
+		   var.axes = F, ellipse = T) +
+	  cowplot::theme_cowplot()  +
+	  labs(tag = "A", col = "Groups") +
+	  theme(legend.position = "None") -> p1
+rownames(m_quant)  <- m_quant$Protein.IDs
+m_quant %>% dplyr::select(-Gene.names, -Protein.IDs) -> df
+rownames(info) <- info$reporter.intensity.id
+ggbiplot::ggbiplot(prcomp(t(df), scale = T),
+		   groups = info[colnames(df),"batch"],
+		   varname.size = 0, size = 1,
+		   var.axes = F, ellipse = T) +
+	  cowplot::theme_cowplot()  +
+	  labs(col = "Groups", tag = "B") -> p1.1
+rownames(m_batch_scld)  <- m_batch_scld$Protein.IDs
+m_batch_scld %>% dplyr::select(-Gene.names, -Protein.IDs) -> df
+rownames(info) <- info$reporter.intensity.id
+ggbiplot::ggbiplot(prcomp(t(df), scale = T),
+		   groups = info[colnames(df),"batch"],
+		   varname.size = 0, size = 1,
+		   var.axes = F, ellipse = F) +
+	  cowplot::theme_cowplot()  +
+	  labs(col = "Groups", tag = "C") +
+	  theme(legend.position = "bottom") -> p2
+ggbiplot::ggbiplot(prcomp(t(df), scale = T),
+		   groups = info[colnames(df),"condition1"],
+		   varname.size = 0, size = 1,
+		   var.axes = F, ellipse = F) +
+	  cowplot::theme_cowplot()  +
+	  labs(col = "Groups", tag = "D") +
+	  scale_color_manual(values = cols) +
+	  theme(legend.position = "bottom") -> p3
+  
+pdf("./result_figs/Supp/proteomics_qc/SFig1.pdf", width = 13, height = 11)
+(p1 + p1.1 ) / (p2 + p3)
+dev.off()
+```
+
+
+```{r}
+# gene-level counts
+# create gene-tx annotation from ucsc hg19 gtf
+annot_general <- get_annot("86", gtf_path = gtfPath, strip_version = F)
+tx2gene <- annot_general[,c(2,1)]
+colnames(tx2gene) <- c("tx","gene")
+# salmon raw data dirs
+files_per_cohort <- file.path(salmonPath, info_rna$sample_id, "quant.sf")
+names(files_per_cohort)  <- info_rna$sample_id
+# import summerized to gene-level (txOut=F)
+cpmAll <- import_and_filter(files_per_cohort, info_rna$sample_id, tx2gene, gtfPath)
+gene_symbols <- cpmAll %>%
+	dplyr::select(gene_id, gene_name)
+```
+
+## Saving preprocessed data for paper code 
+
+```{r}
+saveRDS(info_rna, "./rdsData/info_rna_all.rds")
+saveRDS(cpmAll, "./rdsData/cpmAll_inclPD.rds")
+saveRDS(rawData_filt, "./rdsData/rawData_filt.rds")
+saveRDS(m_quant, "./rdsData/m_quant.rds")
+saveRDS(m_lib, "./rdsData/m_lib.rds")
+saveRDS(m_logLib, "./rdsData/logLib.rds")
+saveRDS(m_batch, "./rdsData/m_batch.rds")
+saveRDS(m_lib_batch, "./rdsData/m_lib_batch.rds")
+saveRDS(m_batch_scld, "./rdsData/m_batch_scld.rds")
+```
+
+
+
