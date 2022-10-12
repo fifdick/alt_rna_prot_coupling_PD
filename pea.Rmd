@@ -13,14 +13,6 @@ output:
 
 
 
-## NOTE:
-
-I changed a few things here and didnt finish going through the whole file!
-- I noticed: complexHeatmap had some error in function score_map (Fig. 1)
-- Node connected components ne to be readjusted and reanalyzed
-- didnt rerun all pea, need to check if results changed (but code worked fine)
-
-
 ```{r echo = F}
 #set JAVA_HOME correctly for ermineR (ermineJ wrapper) to work
 Sys.setenv(JAVA_HOME = "/usr/lib/jvm/java-1.11.0-openjdk-amd64/")
