@@ -1,7 +1,7 @@
 # Altered transcriptome-proteome coupling indicates aberrant proteostasis in Parkinson’s disease 
 
-This repository holds all code and data to reproduce results, figures and and supplementary data presented in "Altered transcriptome-proteome coupling indicates aberrant proteostasis in Parkinson’s disease".
-The paper is currently available on [medrxiv](https://www.medrxiv.org/content/10.1101/2021.03.18.21253875v1) (not peer reviewed).
+This repository holds all code and data to reproduce results, figures and supplementary data presented in ["Altered transcriptome-proteome coupling indicates aberrant proteostasis in Parkinson’s disease"](https://www.cell.com/iscience/fulltext/S2589-0042(23)00002-0?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS2589004223000020%3Fshowall%3Dtrue).
+
 
 
 ## Prerequisites
